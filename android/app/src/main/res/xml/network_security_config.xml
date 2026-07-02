@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- For local development emulator -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- For university servers that might use HTTP in some parts -->
+        <domain includeSubdomains="true">fwu.edu.np</domain>
+        <domain includeSubdomains="true">hamrotayari.com</domain>
+    </domain-config>
+</network-security-config>

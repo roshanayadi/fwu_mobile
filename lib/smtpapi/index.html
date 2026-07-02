@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FWU Mobile Portal — Download</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050810;
+      --surface: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.07);
+      --teal: #00e5c8;
+      --teal-dim: rgba(0,229,200,0.12);
+      --amber: #f59e0b;
+      --blue: #3b82f6;
+      --text: #f0f4ff;
+      --muted: #7a829e;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── CANVAS BACKGROUND ── */
+    #bgCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 3rem;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(5,8,16,0.6);
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .nav-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 2px solid rgba(0,229,200,0.3);
+      box-shadow: 0 0 20px rgba(0,229,200,0.2);
+    }
+    .nav-logo img { width: 28px; height: 28px; object-fit: contain; }
+    .nav-wordmark {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.08em;
+      color: var(--text);
+    }
+    .nav-wordmark span { color: var(--teal); }
+    .nav-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--teal);
+      border: 1px solid rgba(0,229,200,0.35);
+      background: var(--teal-dim);
+      padding: 0.3rem 0.8rem;
+      border-radius: 100px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 4rem;
+      padding: 5rem 5rem 4rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .hero-left { display: flex; flex-direction: column; gap: 2rem; }
+
+    .tag-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--amber);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 0.4rem 1rem;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 100px;
+      width: fit-content;
+    }
+    .tag-line::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 6vw, 6.5rem);
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+    .hero-title .accent {
+      -webkit-text-stroke: 2px var(--teal);
+      color: transparent;
+    }
+    .hero-title .block2 { color: var(--teal); }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      font-weight: 400;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 440px;
+    }
+
+    /* ── STATS ROW ── */
+    .stats {
+      display: flex;
+      gap: 2rem;
+      padding-top: 0.5rem;
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      color: var(--teal);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .stat-divider {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+      margin: 0.3rem 0;
+    }
+
+    /* ── CTA BUTTONS ── */
+    .cta-group { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--teal);
+      color: #050810;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 1rem 2rem;
+      border-radius: 14px;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+      box-shadow: 0 0 40px rgba(0,229,200,0.3), 0 4px 20px rgba(0,229,200,0.2);
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 0 70px rgba(0,229,200,0.5), 0 8px 30px rgba(0,229,200,0.3);
+    }
+    .btn-primary i { font-size: 1.3rem; }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 1rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      text-decoration: none;
+      background: var(--surface);
+      transition: all 0.25s ease;
+      cursor: default;
+    }
+    .btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+
+    .secure-note {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .secure-note i { color: var(--teal); font-size: 0.7rem; }
+
+    /* ── PHONE MOCKUP (RIGHT) ── */
+    .hero-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .phone-wrap {
+      position: relative;
+      animation: floatPhone 7s ease-in-out infinite;
+    }
+    @keyframes floatPhone {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50% { transform: translateY(-20px) rotate(2deg); }
+    }
+
+    .phone-glow {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(0,229,200,0.25) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: glowPulse 4s ease-in-out infinite;
+      border-radius: 50%;
+    }
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.8; transform: translate(-50%,-50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+    }
+
+    .phone-shell {
+      width: 280px;
+      height: 560px;
+      border-radius: 48px;
+      background: linear-gradient(145deg, #1a1e2e 0%, #0d1018 100%);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow:
+        0 60px 100px -20px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -1px 0 rgba(0,0,0,0.5),
+        0 0 0 1px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* notch */
+    .phone-notch {
+      width: 80px;
+      height: 8px;
+      background: #0d1018;
+      border-radius: 0 0 8px 8px;
+      margin: 14px auto 0;
+      flex-shrink: 0;
+    }
+
+    .phone-screen {
+      flex: 1;
+      margin: 10px 12px 12px;
+      background: linear-gradient(160deg, #0b1120 0%, #060a14 100%);
+      border-radius: 36px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px;
+      gap: 14px;
+    }
+
+    /* App header inside phone */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .app-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .app-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .app-avatar img { width: 24px; height: 24px; object-fit: contain; }
+    .app-greeting { font-size: 0.6rem; font-weight: 600; color: var(--muted); }
+    .app-name { font-size: 0.75rem; font-weight: 700; color: var(--text); }
+    .app-notif {
+      width: 28px; height: 28px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: var(--teal);
+      border: 1px solid rgba(0,229,200,0.2);
+    }
+
+    /* Score card in phone */
+    .score-card {
+      background: linear-gradient(135deg, rgba(0,229,200,0.15) 0%, rgba(59,130,246,0.1) 100%);
+      border: 1px solid rgba(0,229,200,0.2);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .score-label { font-size: 0.55rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .score-val { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--teal); line-height: 1.1; }
+    .score-sub { font-size: 0.6rem; color: var(--muted); }
+
+    /* mini bars */
+    .mini-bars { display: flex; flex-direction: column; gap: 8px; }
+    .mini-bar-item { display: flex; align-items: center; gap: 8px; }
+    .mini-bar-label { font-size: 0.55rem; color: var(--muted); width: 50px; }
+    .mini-bar-track { flex: 1; height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+    .mini-bar-fill { height: 100%; border-radius: 2px; animation: barGrow 1.5s ease forwards; }
+    @keyframes barGrow { from { width: 0 } }
+    .mini-bar-score { font-size: 0.6rem; font-weight: 700; color: var(--text); }
+
+    /* phone bottom nav */
+    .phone-nav {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 4px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .pnav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.45rem;
+      color: var(--muted);
+    }
+    .pnav-item.active { color: var(--teal); }
+    .pnav-item i { font-size: 0.75rem; }
+
+    /* ── FEATURES SECTION ── */
+    .features-section {
+      padding: 3rem 5rem 5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+
+    .feat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.8rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 30%, var(--card-glow) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .feat-card:hover { transform: translateY(-6px); border-color: rgba(255,255,255,0.12); }
+    .feat-card:hover::before { opacity: 1; }
+
+    .feat-card:nth-child(1) { --card-glow: rgba(0,229,200,0.12); }
+    .feat-card:nth-child(2) { --card-glow: rgba(59,130,246,0.12); }
+    .feat-card:nth-child(3) { --card-glow: rgba(168,85,247,0.12); }
+    .feat-card:nth-child(4) { --card-glow: rgba(245,158,11,0.12); }
+
+    .feat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+    .feat-icon.teal { background: rgba(0,229,200,0.12); color: var(--teal); border: 1px solid rgba(0,229,200,0.2); }
+    .feat-icon.blue { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+    .feat-icon.purple { background: rgba(168,85,247,0.12); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+    .feat-icon.amber { background: rgba(245,158,11,0.12); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+
+    .feat-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .feat-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(20px);
+      background: rgba(5,8,16,0.6);
+    }
+    .foot-copy {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .foot-copy span { color: var(--teal); }
+    .foot-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .foot-links a {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .foot-links a:hover { color: var(--text); }
+
+    /* ── ENTRY ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      animation: revealUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+    @keyframes revealUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.35s; }
+    .delay-4 { animation-delay: 0.5s; }
+    .delay-5 { animation-delay: 0.65s; }
+    .delay-6 { animation-delay: 0.8s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero { grid-template-columns: 1fr; padding: 3rem 2.5rem; gap: 3rem; }
+      .hero-right { justify-content: center; }
+      .features-section { padding: 2rem 2.5rem 4rem; }
+    }
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.25rem; }
+      .nav-badge { display: none; }
+      .hero { padding: 2.5rem 1.25rem; gap: 2.5rem; }
+      .hero-title { font-size: 3.2rem; }
+      .stats { gap: 1.25rem; }
+      .features-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .features-section { padding: 1rem 1.25rem 3rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; padding: 1.25rem; }
+      .foot-links { gap: 1rem; }
+      .phone-shell { width: 240px; height: 480px; }
+    }
+    @media (max-width: 400px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .phone-shell { width: 210px; height: 420px; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="page">
+    <!-- NAV -->
+    <nav>
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <img src="https://www.collegenp.com/uploads/2021/06/Far-Western-University-Logo.png" alt="FWU">
+        </div>
+        <div class="nav-wordmark">FWU <span>Portal</span></div>
+      </div>
+      <div class="nav-badge">v2.0 · Android</div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <!-- LEFT -->
+      <div class="hero-left">
+        <div class="tag-line reveal delay-1">Now Live — Official Release</div>
+
+        <h1 class="hero-title reveal delay-2">
+          <span class="accent">FAR</span><br>
+          <span class="block2">WESTERN</span><br>
+          UNIVERSITY
+        </h1>
+
+        <p class="hero-sub reveal delay-3">
+          Your complete academic companion. Check results, submit exam forms, and access your records — all from your Android device, anytime, anywhere.
+        </p>
+
+        <div class="stats reveal delay-3">
+          <div class="stat-item">
+            <div class="stat-num">0</div>
+            <div class="stat-label">Students</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-num">0★</div>
+            <div class="stat-label">Rating</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-num"></div>
+            <div class="stat-label">Secure</div>
+          </div>
+        </div>
+
+        <div class="cta-group reveal delay-4">
+          <a href="https://drive.google.com/uc?export=download&id=1B8asB7gyWCCOntxCEyojOnjgjKrGG6_H" class="btn-primary" download>
+            <i class="fa-brands fa-android"></i>
+            Download APK
+          </a>
+          <div class="btn-secondary">
+            <i class="fa-brands fa-apple"></i>
+            iOS Coming Soon
+          </div>
+        </div>
+
+        <div class="secure-note reveal delay-5">
+          <i class="fa-solid fa-lock"></i>
+          Verified · Secure via Google Drive · Free
+        </div>
+      </div>
+
+      <!-- RIGHT: PHONE -->
+      <div class="hero-right reveal delay-4">
+        <div class="phone-wrap">
+          <div class="phone-glow"></div>
+          <div class="phone-shell">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <!-- App UI inside phone -->
+              <div class="app-header">
+                <div class="app-header-left">
+                  <div class="app-avatar">
+                    <img src="../../assets/logo/fwu_logo.png" alt="FWU">
+                  </div>
+                  <div>
+                    <div class="app-greeting">Welcome back 👋</div>
+                    <div class="app-name">FWU Student Portal</div>
+                  </div>
+                </div>
+                <div class="app-notif"><i class="fa-regular fa-bell"></i></div>
+              </div>
+
+              <div class="score-card">
+                <div class="score-label">Semester GPA</div>
+                <div class="score-val">3.87</div>
+                <div class="score-sub">Spring 2025 — Bachelor's Year III</div>
+              </div>
+
+              <div class="mini-bars">
+                <div style="font-size:0.55rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em;">Subject Scores</div>
+                <div class="mini-bar-item">
+                  <div class="mini-bar-label">Maths</div>
+                  <div class="mini-bar-track"><div class="mini-bar-fill" style="width:88%; background:var(--teal);"></div></div>
+                  <div class="mini-bar-score">88</div>
+                </div>
+                <div class="mini-bar-item">
+                  <div class="mini-bar-label">Physics</div>
+                  <div class="mini-bar-track"><div class="mini-bar-fill" style="width:75%; background:#60a5fa;"></div></div>
+                  <div class="mini-bar-score">75</div>
+                </div>
+                <div class="mini-bar-item">
+                  <div class="mini-bar-label">Chemistry</div>
+                  <div class="mini-bar-track"><div class="mini-bar-fill" style="width:92%; background:#c084fc;"></div></div>
+                  <div class="mini-bar-score">92</div>
+                </div>
+                <div class="mini-bar-item">
+                  <div class="mini-bar-label">English</div>
+                  <div class="mini-bar-track"><div class="mini-bar-fill" style="width:81%; background:var(--amber);"></div></div>
+                  <div class="mini-bar-score">81</div>
+                </div>
+              </div>
+
+              <!-- Phone Bottom Nav -->
+              <div class="phone-nav" style="margin-top:auto;">
+                <div class="pnav-item active"><i class="fa-solid fa-house"></i><span>Home</span></div>
+                <div class="pnav-item"><i class="fa-solid fa-chart-bar"></i><span>Results</span></div>
+                <div class="pnav-item"><i class="fa-solid fa-file-lines"></i><span>Forms</span></div>
+                <div class="pnav-item"><i class="fa-regular fa-user"></i><span>Profile</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features-section">
+      <div class="section-label">Core Features</div>
+      <div class="features-grid">
+        <div class="feat-card reveal delay-2">
+          <div class="feat-icon teal"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="feat-title">Instant Results</div>
+          <div class="feat-desc">Check your semester results the moment they are published. No more waiting or refreshing websites.</div>
+        </div>
+        <div class="feat-card reveal delay-3">
+          <div class="feat-icon blue"><i class="fa-solid fa-file-signature"></i></div>
+          <div class="feat-title">Exam Form</div>
+          <div class="feat-desc">Submit and track your examination forms digitally. Deadlines and confirmations delivered instantly.</div>
+        </div>
+        <div class="feat-card reveal delay-4">
+          <div class="feat-icon purple"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div class="feat-title">Academic Records</div>
+          <div class="feat-desc">View your complete academic history, transcripts, and semester-wise grade progression in one place.</div>
+        </div>
+        <div class="feat-card reveal delay-5">
+          <div class="feat-icon amber"><i class="fa-solid fa-shield-halved"></i></div>
+          <div class="feat-title">Secure & Fast</div>
+          <div class="feat-desc">End-to-end encrypted sessions. Your personal data and academic information are always protected.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="foot-copy">&copy; 2026 <span>Far Western University</span> — All Rights Reserved</div>
+      <div class="foot-links">
+        <a href="#">Privacy</a>
+        <a href="#">Support</a>
+        <a href="#">fwu.edu.np</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Animated dot grid background
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, dots = [];
+
+    function init() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      dots = [];
+      const spacing = 45;
+      for (let x = 0; x < W + spacing; x += spacing) {
+        for (let y = 0; y < H + spacing; y += spacing) {
+          dots.push({ x, y, ox: x, oy: y, r: Math.random() * 1.2 + 0.3, phase: Math.random() * Math.PI * 2 });
+        }
+      }
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      dots.forEach(d => {
+        const wave = Math.sin(t * 0.0006 + d.phase) * 4;
+        const nx = d.ox + wave;
+        const ny = d.oy + Math.cos(t * 0.0006 + d.phase) * 4;
+        const cx = W * 0.5, cy = H * 0.5;
+        const dist = Math.hypot(nx - cx, ny - cy);
+        const maxDist = Math.hypot(W, H) * 0.5;
+        const alpha = 0.06 + (1 - dist / maxDist) * 0.1;
+        ctx.beginPath();
+        ctx.arc(nx, ny, d.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,229,200,${alpha})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', init);
+    init();
+    requestAnimationFrame(draw);
+  </script>
+</body>
+</html>
