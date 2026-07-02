@@ -47,3 +47,21 @@ lib/config/app_keys.dart
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# --- Dev scratch / scraped data — not part of the app structure ---
+/emis/
+/scratch/
+/*.html
+/test_*.dart
+/test_schedules.json
+/parse_test*.dart
+/repl.dart
+/clean_prints.dart
+/download_notice.dart
+/emis_searchResult.js
+/temp_*.txt
+/analyze.txt
+/analyze_output.txt
+/flutter_01.png
+/DOCUMENTATION.md
+/FWU_Mobile_Project_Documentation.docx
